@@ -23,35 +23,22 @@ namespace TrainTrain
         public async Task<string> Reserve(string trainId, int nbSeatRequested)
         {
             var train = await _trainRepository.Get(trainId);
+            var reservedSeats = train.ReserveSeats(nbSeatRequested);
+            if (!reservedSeats.Any()) return EmptyReservation(trainId);
 
-            if (train.WillNotExceed70PercentReservation(nbSeatRequested))
-            {
-                var availableSeats = train.Seats.Where(seat => seat.IsNotReserved()).ToList();
+            var bookingRef = await _bookingReferenceService.GetBookingReference(); 
+            await _trainCaching.Save(trainId, train, bookingRef);
+            await _trainDataService.BookSeats(trainId, bookingRef, reservedSeats);
 
-                var reservedSeats = ReserveSeats(nbSeatRequested, availableSeats);
+            return Reservation(trainId, reservedSeats, bookingRef);
 
-                if (reservedSeats.Count != nbSeatRequested) return EmptyReservation(trainId);
 
-                var bookingRef = await _bookingReferenceService.GetBookingReference();
 
-                AddBookingRefToSeats(reservedSeats, bookingRef);
-
-                await _trainCaching.Save(trainId, train, bookingRef);
-
-                await _trainDataService.BookSeats(trainId, bookingRef, reservedSeats);
-                return
-                    $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"{bookingRef}\", \"seats\": {dumpSeats(reservedSeats)}}}";
-            }
-            return EmptyReservation(trainId);
         }
 
-        private static void AddBookingRefToSeats(List<Seat> reservedSeats, string bookingRef)
-        {
-            foreach (var reservedSeat in reservedSeats)
-            {
-                reservedSeat.BookingRef = bookingRef;
-            }
-        }
+        private string Reservation(string trainId, IEnumerable<Seat> reservedSeats, string bookingRef) =>
+            $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"{bookingRef}\", \"seats\": {dumpSeats(reservedSeats)}}}";
+
 
         private static string EmptyReservation(string trainId) =>
             $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"\", \"seats\": []}}";

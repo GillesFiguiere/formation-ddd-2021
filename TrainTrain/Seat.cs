@@ -4,21 +4,18 @@
     {
         public string CoachName { get; }
         public int SeatNumber { get; }
-        public string BookingRef { get; set;  }
+        public bool IsReserved { get; private set; }
 
-        public Seat(string coachName, int seatNumber) : this(coachName, seatNumber, string.Empty)
+        public Seat(string coachName, int seatNumber, bool isReserved)
         {
+            CoachName = coachName;
+            SeatNumber = seatNumber;
+            IsReserved = isReserved;
         }
-
-        public Seat(string coachName, int seatNumber, string bookingRef)
+        
+        public void Reserve()
         {
-            this.CoachName = coachName;
-            this.SeatNumber = seatNumber;
-            this.BookingRef = bookingRef;
+            IsReserved = true;
         }
-
-        public bool IsNotReserved() => BookingRef == "";
-
-        public bool IsReserved() => !IsNotReserved();
     }
 }

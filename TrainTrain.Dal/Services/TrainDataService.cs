@@ -33,7 +33,7 @@ namespace TrainTrain.Dal.Services
             return jsonTrainTopology;
         }
 
-        public async Task BookSeats(string trainId, string bookingRef, List<Seat> availableSeats)
+        public async Task BookSeats(string trainId, string bookingRef, IEnumerable<Seat> availableSeats)
         {
             using (var client = new HttpClient())
             {
