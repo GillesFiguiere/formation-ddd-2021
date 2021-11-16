@@ -46,10 +46,7 @@ namespace TrainTrain
 
                 var bookingRef = await _bookingReferenceService.GetBookingReference();
 
-                foreach (var reservedSeat in reservedSeats)
-                {
-                    reservedSeat.BookingRef = bookingRef;
-                }
+                AddBookingRefToSeats(reservedSeats, bookingRef);
 
                 await _trainCaching.Save(trainId, train, bookingRef);
 
@@ -58,6 +55,14 @@ namespace TrainTrain
                     $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"{bookingRef}\", \"seats\": {dumpSeats(reservedSeats)}}}";
             }
             return EmptyReservation(trainId);
+        }
+
+        private static void AddBookingRefToSeats(List<Seat> reservedSeats, string bookingRef)
+        {
+            foreach (var reservedSeat in reservedSeats)
+            {
+                reservedSeat.BookingRef = bookingRef;
+            }
         }
 
         private static string EmptyReservation(string trainId) =>
