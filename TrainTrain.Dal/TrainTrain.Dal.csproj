@@ -59,6 +59,7 @@
     <Compile Include="IRepositoryEntity.cs" />
     <Compile Include="Entities\SeatEntity.cs" />
     <Compile Include="Entities\TrainEntity.cs" />
+    <Compile Include="Repositories\SeatJsonPoco.cs" />
     <Compile Include="Repositories\TrainRepository.cs" />
     <Compile Include="Services\TrainCaching.cs" />
     <Compile Include="Services\TrainDataService.cs" />
