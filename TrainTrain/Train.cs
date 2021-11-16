@@ -1,36 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Linq;
 
 namespace TrainTrain
 {
     public class Train
     {
         public const int CoachCapacity = 10;
-        public Train(string trainTopol)
+        public Train(List<Seat> seats)
         {
-            this.Seats = new List<Seat>();
-            //var sample =
-            //"{\"seats\": {\"1A\": {\"booking_reference\": \"\", \"seat_number\": \"1\", \"coach\": \"A\"}, \"2A\": {\"booking_reference\": \"\", \"seat_number\": \"2\", \"coach\": \"A\"}}}";
-
-            // Forced to workaround with dynamic parsing since the received JSON is invalid format ;-(
-            dynamic parsed = JsonConvert.DeserializeObject(trainTopol);
-
-            foreach (var token in ((Newtonsoft.Json.Linq.JContainer)parsed))
-            {
-                var allStuffs = ((Newtonsoft.Json.Linq.JObject) ((Newtonsoft.Json.Linq.JContainer) token).First);
-
-                foreach (var stuff in allStuffs)
-                {
-                    var seat = stuff.Value.ToObject<SeatJsonPoco>();
-                    this.Seats.Add(new Seat(seat.coach, int.Parse(seat.seat_number), seat.booking_reference));
-                    if (!string.IsNullOrEmpty(seat.booking_reference))
-                    {
-                        this.ReservedSeats++;
-                    }
-                }
-            }
+            Seats = seats;
         }
 
         public int GetMaxSeat()
@@ -38,17 +17,11 @@ namespace TrainTrain
             return this.Seats.Count;
         }
 
-        public int ReservedSeats { get; set; }
-        public List<Seat> Seats { get; set; }
-        
+        public List<Seat> Seats { get; }
 
-        public bool HasLessThanThreshold(int i)
-        {
-            return ReservedSeats < i;
-        }
 
         public bool WillNotExceed70PercentReservation(int nbSeatRequested) =>
-            ReservedSeats + nbSeatRequested <= Math.Floor(ThreasholdManager.GetMaxRes() * Seats.Count);
+            Seats.Count(s => s.IsReserved()) + nbSeatRequested <= Math.Floor(ThreasholdManager.GetMaxRes() * Seats.Count);
     }
 
     public class TrainJsonPoco

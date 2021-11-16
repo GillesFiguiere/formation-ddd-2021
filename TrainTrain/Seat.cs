@@ -18,5 +18,7 @@
         }
 
         public bool IsNotReserved() => BookingRef == "";
+
+        public bool IsReserved() => !IsNotReserved();
     }
 }
