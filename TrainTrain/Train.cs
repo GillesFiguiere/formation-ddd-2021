@@ -6,6 +6,7 @@ namespace TrainTrain
 {
     public class Train
     {
+        public const int CoachCapacity = 10;
         public Train(string trainTopol)
         {
             this.Seats = new List<Seat>();
@@ -38,11 +39,15 @@ namespace TrainTrain
 
         public int ReservedSeats { get; set; }
         public List<Seat> Seats { get; set; }
+        
 
         public bool HasLessThanThreshold(int i)
         {
             return ReservedSeats < i;
         }
+
+        public bool WillNotExceed70PercentReservation(int nbSeatRequested) =>
+            ReservedSeats + nbSeatRequested <= Math.Floor(ThreasholdManager.GetMaxRes() * Seats.Count);
     }
 
     public class TrainJsonPoco

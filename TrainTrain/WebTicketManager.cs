@@ -32,22 +32,17 @@ namespace TrainTrain
         }
         public async Task<string> Reserve(string trainId, int nbSeatRequested)
         {
-            var availableSeats = new List<Seat>();
-
-            // get the train
+            // TODO repository
             var jsonTrain = await _trainDataService.GetTrain(trainId);
-
             var train = new Train(jsonTrain);
-            if (train.ReservedSeats + nbSeatRequested <= Math.Floor(ThreasholdManager.GetMaxRes() * train.GetMaxSeat()))
+
+            if (train.WillNotExceed70PercentReservation(nbSeatRequested))
             {
-                availableSeats = train.Seats.Where(seat => seat.IsNotReserved()).ToList();
+                var availableSeats = train.Seats.Where(seat => seat.IsNotReserved()).ToList();
 
                 var reservedSeats = ReserveSeats(nbSeatRequested, availableSeats);
 
-                if (reservedSeats.Count != nbSeatRequested)
-                {
-                    return $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"\", \"seats\": []}}";
-                }
+                if (reservedSeats.Count != nbSeatRequested) return EmptyReservation(trainId);
 
                 var bookingRef = await _bookingReferenceService.GetBookingReference();
 
@@ -56,23 +51,22 @@ namespace TrainTrain
                     reservedSeat.BookingRef = bookingRef;
                 }
 
-                if (reservedSeats.Count == nbSeatRequested)
-                {
-                    await _trainCaching.Save(trainId, train, bookingRef);
+                await _trainCaching.Save(trainId, train, bookingRef);
 
-                    await _trainDataService.BookSeats(trainId, bookingRef, reservedSeats);
-                    return
-                            $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"{bookingRef}\", \"seats\": {dumpSeats(reservedSeats)}}}";
-                    
-                }
+                await _trainDataService.BookSeats(trainId, bookingRef, reservedSeats);
+                return
+                    $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"{bookingRef}\", \"seats\": {dumpSeats(reservedSeats)}}}";
             }
-            return $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"\", \"seats\": []}}";
+            return EmptyReservation(trainId);
         }
+
+        private static string EmptyReservation(string trainId) =>
+            $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"\", \"seats\": []}}";
 
         private static List<Seat> ReserveSeats(int nbSeatRequested, List<Seat> availableSeats)
         {
             var reservedSeats = new List<Seat>();
-            if (nbSeatRequested > 10) return reservedSeats;
+            if (nbSeatRequested > Train.CoachCapacity) return reservedSeats;
             
             var firstSeatIndex = 0;
             for (int index = 0; index < availableSeats.Count; index++)
