@@ -55,12 +55,20 @@
     <Compile Include="IRepositoryEntity.cs" />
     <Compile Include="Entities\SeatEntity.cs" />
     <Compile Include="Entities\TrainEntity.cs" />
+    <Compile Include="Services\TrainCaching.cs" />
+    <Compile Include="Services\TrainDataService.cs" />
     <Compile Include="TrainRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TrainTrain\TrainTrain.csproj">
+      <Project>{b7fbbf93-b9f3-4bd8-8b8a-7f7bf52b588a}</Project>
+      <Name>TrainTrain</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

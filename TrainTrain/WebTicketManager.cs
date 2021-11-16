@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,25 +7,16 @@ namespace TrainTrain
 {
     public class WebTicketManager
     {
-        private const string UriBookingReferenceService = "http://localhost:51691/";
-        private const string UriTrainDataService = "http://localhost:50680";
         private readonly ITrainCaching _trainCaching;
         private readonly ITrainDataService _trainDataService;
         private readonly IBookingReferenceService _bookingReferenceService;
 
-        public WebTicketManager():this(new TrainDataService(UriTrainDataService), new BookingReferenceService(UriBookingReferenceService))
+        public WebTicketManager(ITrainDataService trainDataService, IBookingReferenceService bookingReferenceService, ITrainCaching trainCaching)
         {
-
-        }
-
-        public WebTicketManager(ITrainDataService trainDataService, IBookingReferenceService bookingReferenceService)
-        {
-
             _trainDataService = trainDataService;
             _bookingReferenceService = bookingReferenceService;
-            _trainCaching = new TrainCaching();
+            _trainCaching = trainCaching;
             _trainCaching.Clear();
-    
         }
         public async Task<string> Reserve(string trainId, int nbSeatRequested)
         {
