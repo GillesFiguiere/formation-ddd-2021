@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using TrainTrain.Dal.Entities;
 
-namespace TrainTrain.Dal.Services
+namespace TrainTrain.Dal.Repositories
 {
     public class TrainCaching : ITrainCaching
     {
@@ -13,7 +13,7 @@ namespace TrainTrain.Dal.Services
 
         public void Clear()
         {
-            Factory.Create().RemoveAll();
+            TrainRepository.RemoveAll();
         }
 
         private static void Cache(Train trainInst, string trainId, string bookingRef)
@@ -23,7 +23,7 @@ namespace TrainTrain.Dal.Services
             {
                 trainEntity.Seats.Add(new SeatEntity { TrainId = trainId, BookingRef = bookingRef, CoachName = seat.CoachName, SeatNumber = seat.SeatNumber });
             }
-            Factory.Create().Save(trainEntity);
+            TrainRepository.Save(trainEntity);
         }
     }
 }

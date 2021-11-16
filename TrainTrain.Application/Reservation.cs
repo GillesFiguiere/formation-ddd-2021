@@ -3,44 +3,39 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TrainTrain
+namespace TrainTrain.Application
 {
-    public class WebTicketManager
+    public class Reservation
     {
         private readonly ITrainCaching _trainCaching;
         private readonly ITrainDataService _trainDataService;
         private readonly IBookingReferenceService _bookingReferenceService;
-        private readonly ITrainRepository _trainRepository;
 
-        public WebTicketManager(ITrainDataService trainDataService, IBookingReferenceService bookingReferenceService, ITrainCaching trainCaching, ITrainRepository trainRepository)
+        public Reservation(ITrainDataService trainDataService, IBookingReferenceService bookingReferenceService, ITrainCaching trainCaching)
         {
             _trainDataService = trainDataService;
             _bookingReferenceService = bookingReferenceService;
             _trainCaching = trainCaching;
-            _trainRepository = trainRepository;
             _trainCaching.Clear();
         }
-        public async Task<string> Reserve(string trainId, int nbSeatRequested)
+        public async Task<string> Do(string trainId, int nbSeatRequested)
         {
-            var train = await _trainRepository.Get(trainId);
-            var reservedSeats = train.ReserveSeats(nbSeatRequested);
-            if (!reservedSeats.Any()) return EmptyReservation(trainId);
+            var train = await _trainDataService.GetTrain(trainId);
+            var reservedSeats = train.ReserveSeats(nbSeatRequested).ToList();
+            if (!reservedSeats.Any()) return FormatEmptyReservation(trainId);
 
             var bookingRef = await _bookingReferenceService.GetBookingReference(); 
             await _trainCaching.Save(trainId, train, bookingRef);
             await _trainDataService.BookSeats(trainId, bookingRef, reservedSeats);
 
-            return Reservation(trainId, reservedSeats, bookingRef);
-
-
-
+            return FormatReservation(trainId, reservedSeats, bookingRef);
         }
 
-        private string Reservation(string trainId, IEnumerable<Seat> reservedSeats, string bookingRef) =>
+        private string FormatReservation(string trainId, IEnumerable<Seat> reservedSeats, string bookingRef) =>
             $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"{bookingRef}\", \"seats\": {dumpSeats(reservedSeats)}}}";
 
 
-        private static string EmptyReservation(string trainId) =>
+        private static string FormatEmptyReservation(string trainId) =>
             $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"\", \"seats\": []}}";
 
         private static List<Seat> ReserveSeats(int nbSeatRequested, List<Seat> availableSeats)

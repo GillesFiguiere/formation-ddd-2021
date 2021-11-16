@@ -1,9 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 using NFluent;
 using NSubstitute;
 using NUnit.Framework;
+using TrainTrain.Application;
 using TrainTrain.Dal.Repositories;
-using TrainTrain.Dal.Services;
 
 namespace TrainTrain.Test.Acceptance
 {
@@ -19,13 +21,12 @@ namespace TrainTrain.Test.Acceptance
             
             var trainDataService = BuildTrainDataService(TrainId, TrainTopologyGenerator.With_10_available_seats());
             
-            var webTicketManager = new WebTicketManager(
+            var reservation = new Reservation(
                 trainDataService, 
                 BuildBookingReferenceService(BookingReference),
-                new TrainCaching(),
-                new TrainRepository(trainDataService));
+                new TrainCaching());
 
-            var jsonReservation = webTicketManager.Reserve(TrainId, seatsRequestedCount).Result;
+            var jsonReservation = reservation.Do(TrainId, seatsRequestedCount).Result;
 
             Check.That(jsonReservation)
                 .IsEqualTo($"{{\"train_id\": \"{TrainId}\", \"booking_reference\": \"{BookingReference}\", \"seats\": [\"1A\", \"2A\", \"3A\"]}}");
@@ -38,13 +39,12 @@ namespace TrainTrain.Test.Acceptance
 
             var trainDataService = BuildTrainDataService(TrainId, TrainTopologyGenerator.With_10_seats_and_6_already_reserved());
             
-            var webTicketManager = new WebTicketManager(
+            var webTicketManager = new Reservation(
                 trainDataService, 
                 BuildBookingReferenceService(BookingReference),
-                new TrainCaching(),
-                new TrainRepository(trainDataService));
+                new TrainCaching());
             
-            var jsonReservation = webTicketManager.Reserve(TrainId, seatsRequestedCount).Result;
+            var jsonReservation = webTicketManager.Do(TrainId, seatsRequestedCount).Result;
 
             Check.That(jsonReservation)
                 .IsEqualTo($"{{\"train_id\": \"{TrainId}\", \"booking_reference\": \"\", \"seats\": []}}");
@@ -56,13 +56,12 @@ namespace TrainTrain.Test.Acceptance
             const int seatsRequestedCount = 2;
 
             var trainDataService = BuildTrainDataService(TrainId, TrainTopologyGenerator.With_2_coaches_and_9_seats_already_reserved_in_the_first_coach());
-            var webTicketManager = new WebTicketManager(
+            var webTicketManager = new Reservation(
                 trainDataService, 
                 BuildBookingReferenceService(BookingReference),
-                new TrainCaching(),
-                new TrainRepository(trainDataService));
+                new TrainCaching());
 
-            var jsonReservation = webTicketManager.Reserve(TrainId, seatsRequestedCount).Result;
+            var jsonReservation = webTicketManager.Do(TrainId, seatsRequestedCount).Result;
 
             Check.That(jsonReservation)
                 .IsEqualTo($"{{\"train_id\": \"{TrainId}\", \"booking_reference\": \"{BookingReference}\", \"seats\": [\"1B\", \"2B\"]}}");
@@ -74,13 +73,12 @@ namespace TrainTrain.Test.Acceptance
             const int seatsRequestedCount = 11;
 
             var trainDataService = BuildTrainDataService(TrainId, TrainTopologyGenerator.With_2_coaches_and_all_seats_available());
-            var webTicketManager = new WebTicketManager(
+            var webTicketManager = new Reservation(
                 trainDataService, 
                 BuildBookingReferenceService(BookingReference),
-                new TrainCaching(),
-                new TrainRepository(trainDataService));
+                new TrainCaching());
             
-            var jsonReservation = webTicketManager.Reserve(TrainId, seatsRequestedCount).Result;
+            var jsonReservation = webTicketManager.Do(TrainId, seatsRequestedCount).Result;
 
             Check.That(jsonReservation)
                 .IsEqualTo($"{{\"train_id\": \"{TrainId}\", \"booking_reference\": \"\", \"seats\": []}}");
@@ -97,8 +95,27 @@ namespace TrainTrain.Test.Acceptance
         {
             var trainDataService = Substitute.For<ITrainDataService>();
             trainDataService.GetTrain(trainId)
-                .Returns(Task.FromResult(trainTopology));
+                .Returns(Task.FromResult(ParseJsonTrain(trainTopology)));
             return trainDataService;
+        }
+        
+        private static Train ParseJsonTrain(string jsonTrainTopology)
+        {
+            var parsed = JsonConvert.DeserializeObject(jsonTrainTopology);
+
+            var seats = new List<Seat>();
+            foreach (var token in ((Newtonsoft.Json.Linq.JContainer)parsed))
+            {
+                var allStuffs = ((Newtonsoft.Json.Linq.JObject)((Newtonsoft.Json.Linq.JContainer)token).First);
+
+                foreach (var stuff in allStuffs)
+                {
+                    var seat = stuff.Value.ToObject<SeatJsonPoco>();
+                    seats.Add(new Seat(seat.coach, int.Parse(seat.seat_number), seat.booking_reference != ""));
+                }
+            }
+
+            return new Train(seats);
         }
     }
 }

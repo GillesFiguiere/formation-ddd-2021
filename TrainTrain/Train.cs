@@ -7,6 +7,8 @@ namespace TrainTrain
     public class Train
     {
         public const int CoachCapacity = 10;
+        private const double MaxReservationRate = 0.70;
+
         public Train(List<Seat> seats)
         {
             Seats = seats;
@@ -16,7 +18,7 @@ namespace TrainTrain
 
 
         private bool WillNotExceed70PercentReservation(int nbSeatRequested) =>
-            Seats.Count(s => s.IsReserved) + nbSeatRequested <= Math.Floor(ThreasholdManager.GetMaxRes() * Seats.Count);
+            Seats.Count(s => s.IsReserved) + nbSeatRequested <= Math.Floor(MaxReservationRate * Seats.Count);
 
         public IEnumerable<Seat> ReserveSeats(int nbSeatRequested)
         {

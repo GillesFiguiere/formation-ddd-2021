@@ -21,6 +21,7 @@
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="1.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\TrainTrain.Application\TrainTrain.Application.csproj" />
     <ProjectReference Include="..\TrainTrain.Dal\TrainTrain.Dal.csproj" />
     <ProjectReference Include="..\TrainTrain\TrainTrain.csproj" />
   </ItemGroup>

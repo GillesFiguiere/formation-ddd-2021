@@ -5,7 +5,7 @@ namespace TrainTrain
 {
     public interface ITrainDataService
     {
-        Task<string> GetTrain(string train);
+        Task<Train> GetTrain(string train);
         Task BookSeats(string trainId, string bookingRef, IEnumerable<Seat> availableSeats);
     }
 }

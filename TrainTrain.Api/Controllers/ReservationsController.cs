@@ -2,8 +2,9 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using TrainTrain.Api.Models;
+using TrainTrain.Api.Services;
+using TrainTrain.Application;
 using TrainTrain.Dal.Repositories;
-using TrainTrain.Dal.Services;
 
 namespace TrainTrain.Api.Controllers
 {
@@ -17,7 +18,7 @@ namespace TrainTrain.Api.Controllers
         [HttpGet]
         public IEnumerable<string> Get()
         {
-            return new string[] { "value1", "value2" };
+            return new [] { "value1", "value2" };
         }
 
         // GET api/values/5
@@ -33,13 +34,12 @@ namespace TrainTrain.Api.Controllers
         {
             var trainDataService = new TrainDataService(UriTrainDataService);
             
-            var manager = new WebTicketManager(
+            var manager = new Reservation(
                 trainDataService,
                 new BookingReferenceService(UriBookingReferenceService), 
-                new TrainCaching(),
-                new TrainRepository(trainDataService));
+                new TrainCaching());
             
-            return await manager.Reserve(reservationRequest.train_id, reservationRequest.number_of_seats);
+            return await manager.Do(reservationRequest.train_id, reservationRequest.number_of_seats);
         }
 
         // PUT api/values/5

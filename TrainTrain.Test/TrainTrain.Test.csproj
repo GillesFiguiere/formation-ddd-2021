@@ -39,6 +39,10 @@
       <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="NFluent, Version=2.0.0.44, Culture=neutral, PublicKeyToken=18828b37b84b1437, processorArchitecture=MSIL">
       <HintPath>..\packages\NFluent.2.0.0-alpha-44\lib\net40\NFluent.dll</HintPath>
     </Reference>
@@ -67,6 +71,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\TrainTrain.Api\TrainTrain.Api.csproj">
+      <Project>{68c05460-30e0-4fb4-a8bf-3cfa9412181b}</Project>
+      <Name>TrainTrain.Api</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TrainTrain.Application\TrainTrain.Application.csproj">
+      <Project>{af9094a5-38a3-405f-8315-283b4e7a6283}</Project>
+      <Name>TrainTrain.Application</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TrainTrain.Dal\TrainTrain.Dal.csproj">
       <Project>{11b75ce2-05f8-4c3b-81e2-bf378725b2b3}</Project>
       <Name>TrainTrain.Dal</Name>

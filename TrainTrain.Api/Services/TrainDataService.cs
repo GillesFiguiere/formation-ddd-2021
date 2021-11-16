@@ -4,8 +4,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using TrainTrain.Dal.Repositories;
 
-namespace TrainTrain.Dal.Services
+namespace TrainTrain.Api.Services
 {
     public class TrainDataService : ITrainDataService
     {
@@ -16,7 +18,7 @@ namespace TrainTrain.Dal.Services
             _uriTrainDataService = uriTrainDataService;
         }
 
-        public async Task<string> GetTrain(string train)
+        public async Task<Train> GetTrain(string train)
         {
             string jsonTrainTopology;
             using (var client = new HttpClient())
@@ -30,7 +32,27 @@ namespace TrainTrain.Dal.Services
                 response.EnsureSuccessStatusCode();
                 jsonTrainTopology = await response.Content.ReadAsStringAsync();
             }
-            return jsonTrainTopology;
+            
+            return ParseJsonTrain(jsonTrainTopology);
+        }
+
+        private static Train ParseJsonTrain(string jsonTrainTopology)
+        {
+            var parsed = JsonConvert.DeserializeObject(jsonTrainTopology);
+
+            var seats = new List<Seat>();
+            foreach (var token in ((Newtonsoft.Json.Linq.JContainer)parsed))
+            {
+                var allStuffs = ((Newtonsoft.Json.Linq.JObject)((Newtonsoft.Json.Linq.JContainer)token).First);
+
+                foreach (var stuff in allStuffs)
+                {
+                    var seat = stuff.Value.ToObject<SeatJsonPoco>();
+                    seats.Add(new Seat(seat.coach, int.Parse(seat.seat_number), seat.booking_reference != ""));
+                }
+            }
+
+            return new Train(seats);
         }
 
         public async Task BookSeats(string trainId, string bookingRef, IEnumerable<Seat> availableSeats)
