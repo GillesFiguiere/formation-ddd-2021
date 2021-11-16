@@ -42,20 +42,34 @@ namespace TrainTrain
             {
                 var numberOfReserv = 0;
                 // find seats to reserve
-                for (int index = 0, i = 0; index < train.Seats.Count; index++)
+                for (int index = 0; index < train.Seats.Count; index++)
                 {
                     var seat = train.Seats[index];
                     if (seat.BookingRef == "")
                     {
-                        i++;
-                        if (i <= seatsRequestedCount)
-                        {
-                            availableSeats.Add(seat);
-                        }
+                        availableSeats.Add(seat);
+                    }
+                }
+                
+                // reserve seat
+                var reservedSeat = new List<Seat>();
+                var firstSeatIndex = 0;
+                for(int index = 0; index < availableSeats.Count; index++)
+                {
+                    var seat = availableSeats[index];
+                    if(seat.SeatNumber + seatsRequestedCount < 10)
+                    {
+                        firstSeatIndex = index;
+                        break;
                     }
                 }
 
-                foreach (var unused in availableSeats)
+                for (int index = firstSeatIndex; index < firstSeatIndex + seatsRequestedCount; index++)
+                {
+                    reservedSeat.Add(availableSeats[index]);
+                }
+
+                foreach (var unused in reservedSeat)
                 {
                     count++;
                 }
@@ -71,7 +85,7 @@ namespace TrainTrain
                 {
                     bookingRef = await _bookingReferenceService.GetBookingReference();
 
-                    foreach (var availableSeat in availableSeats)
+                    foreach (var availableSeat in reservedSeat)
                     {
                         availableSeat.BookingRef = bookingRef;
                         numberOfReserv++;
@@ -83,9 +97,9 @@ namespace TrainTrain
                 {
                     await _trainCaching.Save(trainId, train, bookingRef);
 
-                    await _trainDataService.BookSeats(trainId, bookingRef, availableSeats);
+                    await _trainDataService.BookSeats(trainId, bookingRef, reservedSeat);
                     return
-                            $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"{bookingRef}\", \"seats\": {dumpSeats(availableSeats)}}}";
+                            $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"{bookingRef}\", \"seats\": {dumpSeats(reservedSeat)}}}";
                     
                 }
             }
