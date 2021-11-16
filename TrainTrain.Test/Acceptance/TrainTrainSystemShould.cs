@@ -54,6 +54,21 @@ namespace TrainTrain.Test.Acceptance
             Check.That(jsonReservation)
                 .IsEqualTo($"{{\"train_id\": \"{TrainId}\", \"booking_reference\": \"{BookingReference}\", \"seats\": [\"1B\", \"2B\"]}}");
         }
+        
+        [Test]
+        public void ReserveNothingWhenNotEnoughSeatsInTheSameCoach()
+        {
+            const int seatsRequestedCount = 11;
+
+            var trainDataService = BuildTrainDataService(TrainId, TrainTopologyGenerator.With_2_coaches_and_all_seats_available());
+            var bookingReferenceService = BuildBookingReferenceService(BookingReference);
+
+            var webTicketManager = new WebTicketManager(trainDataService, bookingReferenceService);
+            var jsonReservation = webTicketManager.Reserve(TrainId, seatsRequestedCount).Result;
+
+            Check.That(jsonReservation)
+                .IsEqualTo($"{{\"train_id\": \"{TrainId}\", \"booking_reference\": \"\", \"seats\": []}}");
+        }
 
         private static IBookingReferenceService BuildBookingReferenceService(string bookingReference)
         {

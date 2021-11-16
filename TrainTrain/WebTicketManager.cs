@@ -72,11 +72,13 @@ namespace TrainTrain
         private static List<Seat> ReserveSeats(int nbSeatRequested, List<Seat> availableSeats)
         {
             var reservedSeats = new List<Seat>();
+            if (nbSeatRequested > 10) return reservedSeats;
+            
             var firstSeatIndex = 0;
             for (int index = 0; index < availableSeats.Count; index++)
             {
                 var seat = availableSeats[index];
-                if (seat.SeatNumber + nbSeatRequested < 10)
+                if (seat.CoachName == availableSeats[index + nbSeatRequested - 1].CoachName)
                 {
                     firstSeatIndex = index;
                     break;
