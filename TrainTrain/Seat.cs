@@ -16,5 +16,7 @@
             this.SeatNumber = seatNumber;
             this.BookingRef = bookingRef;
         }
+
+        public bool IsNotReserved() => BookingRef == "";
     }
 }

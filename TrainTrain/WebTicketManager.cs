@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -31,7 +32,7 @@ namespace TrainTrain
         }
         public async Task<string> Reserve(string trainId, int nbSeatRequested)
         {
-            List<Seat> availableSeats = new List<Seat>();
+            var availableSeats = new List<Seat>();
 
             // get the train
             var jsonTrain = await _trainDataService.GetTrain(trainId);
@@ -39,41 +40,16 @@ namespace TrainTrain
             var train = new Train(jsonTrain);
             if (train.ReservedSeats + nbSeatRequested <= Math.Floor(ThreasholdManager.GetMaxRes() * train.GetMaxSeat()))
             {
-                // find seats to reserve
-                for (int index = 0; index < train.Seats.Count; index++)
-                {
-                    var seat = train.Seats[index];
-                    if (seat.BookingRef == "")
-                    {
-                        availableSeats.Add(seat);
-                    }
-                }
-                
-                // reserve seat
-                var reservedSeats = new List<Seat>();
-                var firstSeatIndex = 0;
-                for(int index = 0; index < availableSeats.Count; index++)
-                {
-                    var seat = availableSeats[index];
-                    if(seat.SeatNumber + nbSeatRequested < 10)
-                    {
-                        firstSeatIndex = index;
-                        break;
-                    }
-                }
+                availableSeats = train.Seats.Where(seat => seat.IsNotReserved()).ToList();
 
-                for (int index = firstSeatIndex; index < firstSeatIndex + nbSeatRequested; index++)
-                {
-                    reservedSeats.Add(availableSeats[index]);
-                }
+                var reservedSeats = ReserveSeats(nbSeatRequested, availableSeats);
 
-                string bookingRef;
                 if (reservedSeats.Count != nbSeatRequested)
                 {
                     return $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"\", \"seats\": []}}";
                 }
 
-                bookingRef = await _bookingReferenceService.GetBookingReference();
+                var bookingRef = await _bookingReferenceService.GetBookingReference();
 
                 foreach (var reservedSeat in reservedSeats)
                 {
@@ -91,6 +67,28 @@ namespace TrainTrain
                 }
             }
             return $"{{\"train_id\": \"{trainId}\", \"booking_reference\": \"\", \"seats\": []}}";
+        }
+
+        private static List<Seat> ReserveSeats(int nbSeatRequested, List<Seat> availableSeats)
+        {
+            var reservedSeats = new List<Seat>();
+            var firstSeatIndex = 0;
+            for (int index = 0; index < availableSeats.Count; index++)
+            {
+                var seat = availableSeats[index];
+                if (seat.SeatNumber + nbSeatRequested < 10)
+                {
+                    firstSeatIndex = index;
+                    break;
+                }
+            }
+
+            for (int index = firstSeatIndex; index < firstSeatIndex + nbSeatRequested; index++)
+            {
+                reservedSeats.Add(availableSeats[index]);
+            }
+
+            return reservedSeats;
         }
 
         private string dumpSeats(IEnumerable<Seat> seats)
