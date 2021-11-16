@@ -2,6 +2,7 @@
 using NFluent;
 using NSubstitute;
 using NUnit.Framework;
+using TrainTrain.Dal.Repositories;
 using TrainTrain.Dal.Services;
 
 namespace TrainTrain.Test.Acceptance
@@ -15,11 +16,15 @@ namespace TrainTrain.Test.Acceptance
         public void Reserve_seats_when_train_is_empty()
         {
             const int seatsRequestedCount = 3;
-
+            
             var trainDataService = BuildTrainDataService(TrainId, TrainTopologyGenerator.With_10_available_seats());
-            var bookingReferenceService = BuildBookingReferenceService(BookingReference);
+            
+            var webTicketManager = new WebTicketManager(
+                trainDataService, 
+                BuildBookingReferenceService(BookingReference),
+                new TrainCaching(),
+                new TrainRepository(trainDataService));
 
-            var webTicketManager = new WebTicketManager(trainDataService, bookingReferenceService, new TrainCaching());
             var jsonReservation = webTicketManager.Reserve(TrainId, seatsRequestedCount).Result;
 
             Check.That(jsonReservation)
@@ -32,9 +37,13 @@ namespace TrainTrain.Test.Acceptance
             const int seatsRequestedCount = 3;
 
             var trainDataService = BuildTrainDataService(TrainId, TrainTopologyGenerator.With_10_seats_and_6_already_reserved());
-            var bookingReferenceService = BuildBookingReferenceService(BookingReference);
-
-            var webTicketManager = new WebTicketManager(trainDataService, bookingReferenceService, new TrainCaching());
+            
+            var webTicketManager = new WebTicketManager(
+                trainDataService, 
+                BuildBookingReferenceService(BookingReference),
+                new TrainCaching(),
+                new TrainRepository(trainDataService));
+            
             var jsonReservation = webTicketManager.Reserve(TrainId, seatsRequestedCount).Result;
 
             Check.That(jsonReservation)
@@ -47,9 +56,12 @@ namespace TrainTrain.Test.Acceptance
             const int seatsRequestedCount = 2;
 
             var trainDataService = BuildTrainDataService(TrainId, TrainTopologyGenerator.With_2_coaches_and_9_seats_already_reserved_in_the_first_coach());
-            var bookingReferenceService = BuildBookingReferenceService(BookingReference);
+            var webTicketManager = new WebTicketManager(
+                trainDataService, 
+                BuildBookingReferenceService(BookingReference),
+                new TrainCaching(),
+                new TrainRepository(trainDataService));
 
-            var webTicketManager = new WebTicketManager(trainDataService, bookingReferenceService, new TrainCaching());
             var jsonReservation = webTicketManager.Reserve(TrainId, seatsRequestedCount).Result;
 
             Check.That(jsonReservation)
@@ -62,9 +74,12 @@ namespace TrainTrain.Test.Acceptance
             const int seatsRequestedCount = 11;
 
             var trainDataService = BuildTrainDataService(TrainId, TrainTopologyGenerator.With_2_coaches_and_all_seats_available());
-            var bookingReferenceService = BuildBookingReferenceService(BookingReference);
-
-            var webTicketManager = new WebTicketManager(trainDataService, bookingReferenceService, new TrainCaching());
+            var webTicketManager = new WebTicketManager(
+                trainDataService, 
+                BuildBookingReferenceService(BookingReference),
+                new TrainCaching(),
+                new TrainRepository(trainDataService));
+            
             var jsonReservation = webTicketManager.Reserve(TrainId, seatsRequestedCount).Result;
 
             Check.That(jsonReservation)

@@ -10,19 +10,19 @@ namespace TrainTrain
         private readonly ITrainCaching _trainCaching;
         private readonly ITrainDataService _trainDataService;
         private readonly IBookingReferenceService _bookingReferenceService;
+        private readonly ITrainRepository _trainRepository;
 
-        public WebTicketManager(ITrainDataService trainDataService, IBookingReferenceService bookingReferenceService, ITrainCaching trainCaching)
+        public WebTicketManager(ITrainDataService trainDataService, IBookingReferenceService bookingReferenceService, ITrainCaching trainCaching, ITrainRepository trainRepository)
         {
             _trainDataService = trainDataService;
             _bookingReferenceService = bookingReferenceService;
             _trainCaching = trainCaching;
+            _trainRepository = trainRepository;
             _trainCaching.Clear();
         }
         public async Task<string> Reserve(string trainId, int nbSeatRequested)
         {
-            // TODO repository
-            var jsonTrain = await _trainDataService.GetTrain(trainId);
-            var train = new Train(jsonTrain);
+            var train = await _trainRepository.Get(trainId);
 
             if (train.WillNotExceed70PercentReservation(nbSeatRequested))
             {

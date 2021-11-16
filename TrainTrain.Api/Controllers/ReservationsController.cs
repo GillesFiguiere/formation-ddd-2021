@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using TrainTrain.Api.Models;
+using TrainTrain.Dal.Repositories;
 using TrainTrain.Dal.Services;
 
 namespace TrainTrain.Api.Controllers
@@ -32,7 +33,14 @@ namespace TrainTrain.Api.Controllers
         [HttpPost]
         public async Task<string> Post([FromBody]ReservationRequestDto reservationRequest)
         {
-            var manager = new WebTicketManager(new TrainDataService(UriTrainDataService), new BookingReferenceService(UriBookingReferenceService), new TrainCaching());
+            var trainDataService = new TrainDataService(UriTrainDataService);
+            
+            var manager = new WebTicketManager(
+                trainDataService,
+                new BookingReferenceService(UriBookingReferenceService), 
+                new TrainCaching(),
+                new TrainRepository(trainDataService));
+            
             return await manager.Reserve(reservationRequest.train_id, reservationRequest.number_of_seats);
         }
 
