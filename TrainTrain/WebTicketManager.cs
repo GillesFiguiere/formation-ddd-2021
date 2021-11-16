@@ -37,20 +37,20 @@ namespace TrainTrain
             // get the train
             var jsonTrain = await _trainDataService.GetTrain(trainId);
 
-            var trainInst = new Train(jsonTrain);
-            if (trainInst.ReservedSeats + seatsRequestedCount <= Math.Floor(ThreasholdManager.GetMaxRes() * trainInst.GetMaxSeat()))
+            var train = new Train(jsonTrain);
+            if (train.ReservedSeats + seatsRequestedCount <= Math.Floor(ThreasholdManager.GetMaxRes() * train.GetMaxSeat()))
             {
                 var numberOfReserv = 0;
                 // find seats to reserve
-                for (int index = 0, i = 0; index < trainInst.Seats.Count; index++)
+                for (int index = 0, i = 0; index < train.Seats.Count; index++)
                 {
-                    var each = trainInst.Seats[index];
-                    if (each.BookingRef == "")
+                    var seat = train.Seats[index];
+                    if (seat.BookingRef == "")
                     {
                         i++;
                         if (i <= seatsRequestedCount)
                         {
-                            availableSeats.Add(each);
+                            availableSeats.Add(seat);
                         }
                     }
                 }
@@ -81,7 +81,7 @@ namespace TrainTrain
 
                 if (numberOfReserv == seatsRequestedCount)
                 {
-                    await _trainCaching.Save(trainId, trainInst, bookingRef);
+                    await _trainCaching.Save(trainId, train, bookingRef);
 
                     await _trainDataService.BookSeats(trainId, bookingRef, availableSeats);
                     return
